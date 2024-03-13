@@ -31,23 +31,23 @@ make_cluster_consensus <- function(cluster, outlinedata) {
   outline_clusters <- cbind(outlinedata, cluster$cluster)
 
 
-  # title <- paste(names(cluster[1:(length(cluster) - 1)]), collapse = " ")
-  #
-  # words <- str_extract_all(title, "\\b\\w+\\b")[[1]]
-  # # Extract words and numbers
-  # extracted2 <- gsub("_\\d+", "", words[1])
-  # words2 <- unique(gsub("_", " ", extracted2))
-  #
-  # numbers <- gsub("[^0-9]+", " ", title)
-  #
-  # # Split the numbers by space
-  # number_parts <- as.numeric(unlist(strsplit(numbers, " ")))
-  #
-  # # Determine the range of numbers
-  # number_range <- paste(min(number_parts, na.rm = TRUE), max(number_parts, na.rm = TRUE), sep = ":")
-  # if (any(grepl("\\d+:\\d+", number_range))) {
-  #   # Create new title
-  #   title <- paste0(words2, sep = " ", number_range, recycle0 = TRUE)
+title <- paste(names(cluster[1:(length(cluster) - 1)]), collapse = " ")
+
+words <- str_extract_all(title, "\\b\\w+\\b")[[1]]
+# Extract words and numbers
+extracted2 <- gsub("_\\d+", "", words[1])
+words2 <- unique(gsub("_", " ", extracted2))
+
+numbers <- gsub("[^0-9]+", " ", title)
+
+# Split the numbers by space
+number_parts <- as.numeric(unlist(strsplit(numbers, " ")))
+
+# Determine the range of numbers
+number_range <- paste(min(number_parts, na.rm = TRUE), max(number_parts, na.rm = TRUE), sep = ":")
+if (any(grepl("\\d+:\\d+", number_range))) {
+  # Create new title
+  title <- paste0(words2, sep = " ", number_range, recycle0 = TRUE)
 
     path_data_xlist <- list()
     path_data_ylist <- list()
@@ -105,10 +105,10 @@ make_cluster_consensus <- function(cluster, outlinedata) {
     consensus <- ggplot(faceted_df, aes(Column2, Column1, fill = colourfactor)) +
       geom_polygon() +
       geom_text(aes(x = Inf, y = Inf, label = facet_count), vjust = 1.5, hjust = 1.5) +
-      geom_path(data = faceted_path_df, aes(x = faceted_path_df$Column2, y = faceted_path_df$Column1), linewidth = 1.5) +
+      #geom_path(data = faceted_path_df, aes(x = faceted_path_df$Column2, y = faceted_path_df$Column1), linewidth = 1.5) +
       facet_wrap(faceted_df$facet) +
-      theme_minimal() +
-      coord_fixed(ratio = 1, xlim = NULL, ylim = NULL, expand = TRUE, clip = "on")
+      theme_minimal()# +
+      #coord_fixed(ratio = 1, xlim = NULL, ylim = NULL, expand = TRUE, clip = "on")
 consensus
 } #else {
 #     title <- paste0(words2, sep = " ", recycle0 = TRUE)
@@ -164,8 +164,31 @@ Long_on_right<- Pigclus[Pigclus$`cluster$cluster` == 2, ]
 
 Long_on_right_inverted_outlines <- Long_on_right %>%
   mutate(across(starts_with("Outline_OrientedCoordinates_X"), ~ . - 2 * .))
+#reordering outlines
+new_order <- seq(99, 0, by = -1)
+
+
+# Generate the new column names for Angle, Diameter, and Radius profiles
+new_column_names_angle <- paste0("Angle_profile_", new_order)
+new_column_names_diameter <- paste0("Diameter_profile_", new_order)
+new_column_names_radius <- paste0("Radius_profile_", new_order)
+# Generate the new column names for X-coordinates
+new_column_names_x <- paste0("Outline_OrientedCoordinates_X_", new_order)
+
+# Generate the new column names for Y-coordinates
+#new_column_names_y <- paste0("Outline_OrientedCoordinates_y_", new_order)
+# Rename Angle, Diameter, and Radius profile columns
+Long_on_right_inverted_outlines_swapped <- Long_on_right_inverted_outlines %>%
+ # mutate(across(starts_with("Outline_OrientedCoordinates_X"), ~ . - 2 * .)) %>%
+  rename_with(~ new_column_names_x, starts_with("Outline_OrientedCoordinates_X")) %>%
+  #rename_with(~ new_column_names_y, starts_with("Outline_OrientedCoordinates_y")) %>%
+  rename_with(~ new_column_names_angle, starts_with("Angle_profile_")) %>%
+  rename_with(~ new_column_names_diameter, starts_with("Diameter_profile_")) %>%
+  rename_with(~ new_column_names_radius, starts_with("Radius_profile_"))
+
 
 Long_on_left<- Pigclus[Pigclus$`cluster$cluster` == 1, ]
-reoriented_outline_pig_data<-rbind(Long_on_right_inverted_outlines,Long_on_left)
+reoriented_outline_pig_data<-rbind(Long_on_right_inverted_outlines_swapped,Long_on_left)
 reoriented_outlinedata <-reoriented_outline_pig_data%>% dplyr::select(starts_with("Outline_Oriented"))
 graph2 <- make_cluster_consensus(cluster = clusters, outlinedata = reoriented_outlinedata)
+graph2
