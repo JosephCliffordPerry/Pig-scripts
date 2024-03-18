@@ -67,7 +67,7 @@ for (i in seq_along(graph_list)) {
 
   cat("Saved plot:", plot_filename, "\n")
 }
-####################
+
 # graphs show uneaven distribution of abnormal sperm testing
 #individual samples to see if they fit the pattern find >6% and >8%
 # Initialize an empty data frame
@@ -97,6 +97,7 @@ normal<-sum(pig$Clustering_file == 1)
 normalpercent<-(normal/nrow(pig))*100
 sample<-basename(pig[1,6])
 
+<<<<<<< HEAD
 Intermediaryphenotype1<-sum(pig$Clustering_file == 4)
 Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
 
@@ -107,6 +108,17 @@ Intermediaryphenotype3<-sum(pig$Clustering_file ==8)
 Intermediaryphenotype3percent<-(Intermediaryphenotype3/nrow(pig))*100
 
 Intermediaryphenotype4<-sum(pig$Clustering_file == 2)
+=======
+Intermediaryphenotype1<-sum(pig$Clustering_file == 2)
+Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
+
+Intermediaryphenotype2<-sum(pig$Clustering_file == 3)
+Intermediaryphenotype2percent<-(Intermediaryphenotype2/nrow(pig))*100
+
+Intermediaryphenotype3<-sum(pig$Clustering_file ==4)
+Intermediaryphenotype3percent<-(Intermediaryphenotype3/nrow(pig))*100
+
+Intermediaryphenotype4<-sum(pig$Clustering_file == 5)
 Intermediaryphenotype4percent<-(Intermediaryphenotype4/nrow(pig))*100
 
 Extremephenotype1<-sum(pig$Clustering_file == 6)
@@ -115,7 +127,9 @@ Extremephenotype1percent<-(Extremephenotype1/nrow(pig))*100
 Extremephenotype2<-sum(pig$Clustering_file == 7)
 Extremephenotype2percent<-(Extremephenotype2/nrow(pig))*100
 
-Extremephenotype3<-sum(pig$Clustering_file == 3)
+
+Extremephenotype3<-sum(pig$Clustering_file == 8)
+
 Extremephenotype3percent<-(Extremephenotype3/nrow(pig))*100
 
 # Create a row with the results
@@ -161,13 +175,12 @@ percentage_df <- percentage_df %>%
 Percentagelist<-list()
 # Split the data into a list by unique values in 'column_to_split'
 Percentagelist <- split(percentage_df, percentage_df[["Group"]])
-Percentagelist <- percentage_df
 bargraphlist<-list()
 for( i in 1:length(Percentagelist)){
 
 # Create the stacked bar chart
 percentage_df<-Percentagelist[[i]]
-sorted_percentage_df <- percentage_df[order(-normalPercent),]
+
 melted_df <- reshape2::melt(percentage_df, id.vars = "Sampleid")
 # Remove rows where the value in 'variable_column' is "Group"
 filtered_df <- subset(melted_df, !grepl("Group", get("variable")))
@@ -186,6 +199,8 @@ bargraphlist[[i]]<-ggplot(filtered_df_nonzero, aes(x = factor(Sampleid), y = val
     "Extreme1Percent" = "purple",
     "Extreme2Percent" = "purple",
     "Extreme3Percent" = "purple"
+"
+
   )) +
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -213,4 +228,6 @@ filtered_df %>%
   group_by(Sample) %>%
   summarise(total_value = sum(value))
 
+
 ###################
+
