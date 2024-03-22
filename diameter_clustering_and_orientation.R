@@ -192,3 +192,20 @@ reoriented_outline_pig_data<-rbind(Long_on_right_inverted_outlines_swapped,Long_
 reoriented_outlinedata <-reoriented_outline_pig_data%>% dplyr::select(starts_with("Outline_Oriented"))
 graph2 <- make_cluster_consensus(cluster = clusters, outlinedata = reoriented_outlinedata)
 graph2
+
+# make diameter umap
+library(umap)
+library(ggplot2)
+
+diameterumap <- umap(diameter_data, preserve.seed = TRUE)
+diameterumap_clusters<- as.data.frame(cbind(diameterumap[["layout"]],as.factor(clusters$cluster)))
+diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
+  ggplot(data = diameterumap_clusters, aes(V1, V2, color = V3)) +
+   geom_point()+
+  #   scale_color_manual(values = c(
+  #     "1" = "red",
+  #     "2"= "skyblue"
+#   )) +
+  labs(title = "UMAP on diameter profile", x = "UMAP1", y = "UMAP2", color = "clusters")+
+  theme(legend.position = "none")
+#beans (for some reason this is a load bearing comment)
