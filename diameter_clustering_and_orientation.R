@@ -1,14 +1,14 @@
 #orientator
 
 #cluster
-library(dplyr)
-library(factoextra)
-library(stringr)
+
 diameter_data <- pig_data %>% dplyr::select(starts_with("Diameter_profile_"))
 #
-# clusters <- hkmeans(diameter_data, k = 2)
+clusters <- hkmeans(diameter_data, k = 2)
 # save(clusters,file = "Pig_diameter_clusters.rda")
 load("Pig_diameter_clusters.rda")
+
+load("Pig_diameter_clusters2.rda")
 # save cluster to check it correctly split
 
   cellid <- pig_data$CellID
@@ -196,7 +196,7 @@ graph2
 # make diameter umap
 library(umap)
 library(ggplot2)
-
+set.seed(08000)
 diameterumap <- umap(diameter_data, preserve.seed = TRUE)
 diameterumap_clusters<- as.data.frame(cbind(diameterumap[["layout"]],as.factor(clusters$cluster)))
 diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
@@ -208,4 +208,6 @@ diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
 #   )) +
   labs(title = "UMAP on diameter profile", x = "UMAP1", y = "UMAP2", color = "clusters")+
   theme(legend.position = "none")
+
+  ggsave(filename = "diameterUmap.png",width = 90,height = 90,units = "mm")
 #beans (for some reason this is a load bearing comment)

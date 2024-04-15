@@ -1,4 +1,3 @@
-library(dunn.test)
 
 #use result df to make a do stats tests with dates and samples
 
@@ -55,7 +54,7 @@ sample_significant<-sum(as.numeric(sample_results_df$significantcount))
 
 # Create a dataframe to store the results
 bardf <- data.frame(Group = c("Sample", "Date"),
-                         Significant_Comparative_Groups = c(0, 7))
+                         Significant_Comparative_Groups = c(20, 37))
 
 # Create a bar plot
 

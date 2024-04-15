@@ -42,3 +42,30 @@ cluster_Breed_Graph4<-bargraphlist[[13]]+bargraphlist[[14]]+bargraphlist[[15]]+b
 #make graph of breed percentages
 ggplot(Breed_Clusters, aes(x = 1, y = Freq, fill = Dataset,group = Dataset)) +
   geom_bar(position = "fill",stat = "identity")
+
+#########################
+#Breed UMAP
+
+Breed_data<-read.table("D:/Full_pig_project/Breeds_stats.txt",sep = "\t",header = TRUE)
+
+#Add a new column called Breed
+Breed_data <- Breed_data %>%
+  mutate(Breed = case_when(
+    grepl("Hampshire", Folder, ignore.case = TRUE) ~ "Hampshire",
+    grepl("Landrace", Folder, ignore.case = TRUE) ~ "Landrace",
+    grepl("Large White", Folder, ignore.case = TRUE) ~ "Large White",
+    grepl("Pietrain", Folder, ignore.case = TRUE) ~ "Pietrain",
+    grepl("White Duroc", Folder, ignore.case = TRUE) ~ "White Duroc",
+    TRUE ~ "Other"
+  ))
+Breed_full_UMAP<-umap(Breed_data %>% select_if(is.numeric))
+
+Breed_full_UMAP_clusters<- as.data.frame(cbind(Breed_full_UMAP[["layout"]],Breed_data$Breed))
+Breed_full_UMAP_clusters$V3 <- factor(Breed_full_UMAP_clusters$V3)
+ggplot(data = Breed_full_UMAP_clusters, aes(V1, V2, color = V3)) +
+  geom_point()+
+  theme(axis.text = element_blank(), axis.title = element_blank())+
+  labs(title = "UMAP of all morphometric data coloured by breed", x = "UMAP1", y = "UMAP2", color = "Breeds")
+
+
+#beans (for some reason this is a load bearing comment)

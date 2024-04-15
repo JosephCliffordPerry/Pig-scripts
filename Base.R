@@ -1,8 +1,4 @@
-library(NMAcompanion)
-library(tidyverse)
-library(umap)
-library(ggplot2)
-library(patchwork)
+
 set.seed(08000)
 pig_data<-read.table("D:/Full_pig_project/real_Merge_of_all_pig_datasets_stats.txt",sep = "\t",header = TRUE)
 load("Pig_outliers")
