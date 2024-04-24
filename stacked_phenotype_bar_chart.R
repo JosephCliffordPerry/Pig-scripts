@@ -1,5 +1,5 @@
 pig_data<-read.table("D:/Full_pig_project/real_Merge_of_all_pig_datasets_stats.txt",sep = "\t",header = TRUE)
-load("Pig_outliers")
+#load("Pig_outliers")
 Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
 
 #rename_ids
