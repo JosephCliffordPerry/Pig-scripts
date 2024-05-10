@@ -54,3 +54,37 @@ Manual_clusters<-rbind(param1,param2,param3,remaning)
 
 
 write.table(Manual_clusters, file = "filter2.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+##########################
+# Manual filter for cells with posterior bulge
+
+param1filtered_and_extracted<- filter_and_extract(pig_data, "Angle_profile_6", 140)
+
+# Extracted rows
+param1extracted_rows <- param1filtered_and_extracted$smaller_rows
+# Filtered dataset
+param1filtered_dataset <- param1filtered_and_extracted$bigger_rows
+#
+param2filtered_and_extracted <- filter_and_extract(param1filtered_dataset, "Angle_profile_5", 140)
+
+# Extracted rows
+param2extracted_rows <- param2filtered_and_extracted$bigger_rows
+# Filtered dataset
+param2filtered_dataset <- param2filtered_and_extracted$smaller_rows
+
+param3filtered_and_extracted <- filter_and_extract(param1filtered_dataset, "Angle_profile_4", 140)
+
+# Extracted rows
+param3extracted_rows <- param2filtered_and_extracted$bigger_rows
+# Filtered dataset
+param3filtered_dataset <- param2filtered_and_extracted$smaller_rows
+
+
+param3<-cbind(param3extracted_rows$CellID,4)
+param1<-cbind(param1extracted_rows$CellID,3)
+param2<-cbind(param2extracted_rows$CellID,2)
+remaning<-cbind(param3filtered_dataset$CellID,1)
+Manual_clusters<-rbind(param1,param2,param3,remaning)
+
+
+write.table(Manual_clusters, file = "posterior_bulge.txt", sep = "\t", quote = FALSE, row.names = FALSE)

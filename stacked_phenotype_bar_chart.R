@@ -2,14 +2,14 @@ pig_data<-read.table("D:/Full_pig_project/real_Merge_of_all_pig_datasets_stats.t
 #load("Pig_outliers")
 Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
 
-#rename_ids
-renamedham<-hamming_data_from_outlier %>% rename(
-  CellID = UUID
-)
+# #rename_ids
+# renamedham<-hamming_data_from_outlier %>% rename(
+#   CellID = UUID
+# )
 #alternative clusterings
-# renamedham<-Outliers4 %>% rename(
-#       CellID = V1,
-# Clustering_file = V2)
+renamedham<-Outliers4 %>% rename(
+      CellID = V1,
+Clustering_file = V2)
 #alternative clustering
 # renamedham<-as.data.frame(Manual_clusters) %>% rename(
 #        CellID = V1,
