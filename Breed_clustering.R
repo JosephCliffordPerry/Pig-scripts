@@ -29,11 +29,13 @@ diameterumap <- umap(diameter_data, preserve.seed = TRUE)
 diameterumap_clusters<- as.data.frame(cbind(diameterumap[["layout"]],as.factor(Breed_data$Breed)))
 diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
 ggplot(data = diameterumap_clusters, aes(V1, V2, color = V3)) +
-  geom_point(size = 0.5)+
+  geom_point(size = 0.8)+
   labs(title = "UMAP on diameter profile against Breed", x = "UMAP1", y = "UMAP2", color = "Breeds")+
   scale_color_discrete(labels = c("Hampshire", "Landrace ", "Large White ","Other","Pietrain","White Duroc"))
 
-ggsave(filename = "BreedUmap3.png",width = 170,height = 170,units = "mm")
+
+ggsave(filename = "figures/Breed_diameter_Umap.png",width = 180,height = 180,units = "mm",dpi = 300)
+
 
 ################
 #split dataset by breed
@@ -109,6 +111,7 @@ p_adjusted_matrix_angle <- p.adjust(p_value_matrix_angle, method = "holm")
 p_adjusted_matrix_diameter
 p_adjusted_matrix_radius
 p_adjusted_matrix_angle
+
 
 ###############
 

@@ -1,20 +1,3 @@
-# Streamlined analysis with Joe's manually placed landmarks
-# The landmarks were lifted over to my own nmd file for clean stats export
-
-######################## Imports #################
-
-
-source("Ben's_common_functions.R")
-
-COLOURS <- RColorBrewer::brewer.pal(8, "Dark2")
-
-if (!dir.exists("data")) {
-  dir.create("data")
-}
-
-if (!dir.exists("figures")) {
-  dir.create("figures")
-}
 
 ######################## Functions##############################################
 # Remove cells with angle profile values far outside the expected range. Most
@@ -52,63 +35,6 @@ remove.tail.related.columns <- function(data) {
   remove.nonclustering.columns(data) %>% dplyr::select(
     -contains("profile")
   )
-}
-
-# run glm on a training and test dataset
-run.glm <- function(train, test) {
-  # Decent numbers in split?
-  print(dim(train))
-  print(dim(test))
-
-  # Equal numbers of fertile and subfertile in train?
-  print(table(train$Type))
-  print(table(test$Type))
-
-  result <- list()
-
-  all.glm <- glm(TypeInt ~ .,
-                 data = remove.nonclustering.columns(train),
-                 family = binomial(link = "logit")
-  )
-  plotGLM(model = all.glm)
-
-  # predictions on the validation set
-  test$PredictedType <- predict(all.glm, newdata = test, type = "response")
-  train$PredictedType <- predict(all.glm, newdata = train, type = "response")
-
-  # assigning the probability cutoff as 0.5
-  test$PredictedClass <- as.factor(ifelse(test$PredictedType >= 0.5, 1, 0))
-  train$PredictedClass <- as.factor(ifelse(train$PredictedType >= 0.5, 1, 0))
-
-  sample.numbers <- test %>%
-    dplyr::group_by(Folder, Type) %>%
-    dplyr::summarise(Cells = n())
-
-  by.sample <- test %>%
-    dplyr::group_by(Folder, Type) %>%
-    dplyr::summarise(
-      MeanPredict = mean(PredictedType),
-      MedianPredict = median(PredictedType)
-    )
-
-  by.sample.plot <- ggplot(test, aes(x = Folder, y = PredictedType, col = Type)) +
-    geom_boxplot() +
-    geom_text(data = sample.numbers, aes(x = Folder, y = -0.05, label = Cells)) +
-    labs(y = "Predicted type of sample", x = "Sample") +
-    theme_bw()
-
-
-  pred.sample.plot <- ggplot(by.sample, aes(x = Type, y = MeanPredict)) +
-    geom_hline(yintercept = 0.5) +
-    geom_point() +
-    labs(y = "Mean of sample", x = "Type") +
-    theme_bw()
-
-  return(list(
-    "test" = test, "train" = train, "by.sample" = by.sample.plot,
-    "predicted.samples" = pred.sample.plot, "model" = all.glm,
-    "confusionMatrix" = caret::confusionMatrix(test$PredictedClass, test$TypeInt, positive = "1")
-  ))
 }
 
 
@@ -233,37 +159,14 @@ run.other.glm <- function(train, test) {
 save.double <- function(plot, name, height = 170) {
   ggsave(paste0("figures/", name), plot, dpi = 300, units = "mm", width = 170, height = height)
 }
-
+set.seed(08000)
 # detection of pig outliers
 
-#############################################################
-make_outlier_cluster <- function(profile_data, profile_type) {
-  boolean_matrix <- get_outlier_features(profile_data)
-  #true boolean double
-  tboolean <- which(boolean_matrix, arr.ind = TRUE)
-  # #set a 5% threshold of the dataset
-  # outlier_threshold <- (nrow(profile_data) / 20)
-  # make table of true values
-  booleancount <- table(tboolean[, 1])
-  #cell ids
-  outliercluster <- cbind(pig_data$CellID, 1)
-  ## take the top 5% strangest values
-  ## outlier_rows <- names(head(sort(booleancount, decreasing = TRUE), outlier_threshold))
-
-  #try and take a reasonable portion
-  outlier_rows <- names( which((booleancount > mean(booleancount))))
-  #format dataframe
-  outliercluster[as.numeric(outlier_rows), 2] <- 2
-  outliercluster <- as.data.frame(outliercluster)
-  names(outliercluster)[names(outliercluster) == "V1"] <- paste0(profile_type, " ", "outliers")
-  names(outliercluster)[names(outliercluster) == "V2"] <- "Clustering_file"
-  return(list(outliercluster))
-}
 ######################## Read data #############################################
 
 # Data from reanalysis of raw images - 21759 nuclei
 # Exported from 2.2.0 so diameter profiles are absolute
-#pig.data <- read.nma.stats("Normal_abnormal_merged_stats.txt")
+
 pig.data <- read.nma.stats("data/real_Merge_of_all_pig_datasets_stats.txt") #- my dataset has 20795 sperm?
 pig.data <- remove.poor.edge.detection(pig.data) # removes a few hundred
 
@@ -296,48 +199,7 @@ train <- pig.outliers[pig.outliers$Sample %in% unique(pig.outliers$Sample)[train
 test <- pig.outliers[pig.outliers$Sample %in% unique(pig.outliers$Sample)[train.folders == F], ]
 
 Aper.sample.output <- run.profile.glm(train, test)
-#
-# complete.glm.plots <- patchwork::wrap_plots(Aper.sample.output$by.sample, Aper.sample.output$predicted.samples,
-#                                             nrow = 1
-# ) + plot_annotation(tag_levels = c("A"))
-#
-#
-#
-# #save.double(complete.glm.plots, "complete.glm.png", height = 85)
-#
-# # Do the abnormal predictions come down mainly to the size? Yes.
-# sample.prediction.plot <- ggplot(per.sample.output$test, aes(x = PredictedType, y = Area_square_pixels)) +
-#   geom_point(data = per.sample.output$test %>% dplyr::select(-Sample, -Type), col = "grey", size = 0.1) +
-#   geom_point(col = "blue", size = 0.1) +
-#   labs(x = "Confidence nucleus is normal", y = "Area of nucleus") +
-#   facet_wrap(Type ~ Sample) +
-#   theme_bw()
-#
-# save.double(sample.prediction.plot, "sample.prediction.plot.png")
-#
-#
-# # Calculate the coefficient of variation
-# cv <- function(x) sd(x) / mean(x)
-#
-# cv(per.sample.output$test$PredictedType)
-#
-# # Are the abnormals more variable?
-# cv.data <- per.sample.output$test %>%
-#   dplyr::group_by(Sample, Type) %>%
-#   dplyr::summarise(CV = cv(PredictedType))
-#
-# # A bit, but not really in a useful way
-# ggplot(cv.data, aes(x = Type, y = CV)) +
-#   geom_boxplot(size = 0.1) +
-#   geom_jitter(width = 0.1) +
-#   labs(x = "Sample", y = "Coefficient of variation") +
-#   theme_bw()
-#
-#
-# Agregated_prediction_outliers<-per.sample.output$aggregted_prediction %>% dplyr::arrange(MeanPredict)
 
-
-# Performs much better - we can pretty much be sure of fails
 
 ####standard measurement model####
 # standard measuremnts used in two papers
@@ -370,46 +232,6 @@ train <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pi
 test <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == F], ]
 
 Bper.sample.output <- run.other.glm(train, test)
-#
-# complete.glm.plots <- patchwork::wrap_plots(per.sample.output$by.sample, per.sample.output$predicted.samples,
-#                                             nrow = 1
-# ) + plot_annotation(tag_levels = c("A"))
-#
-#
-#
-# #save.double(complete.glm.plots, "complete.glm.png", height = 85)
-#
-# # Do the abnormal predictions come down mainly to the size? Yes.
-# sample.prediction.plot <- ggplot(per.sample.output$test, aes(x = PredictedType, y = V6)) +
-#   geom_point(data = per.sample.output$test %>% dplyr::select(-Sample, -Type), col = "grey", size = 0.1) +
-#   geom_point(col = "blue", size = 0.1) +
-#   labs(x = "Confidence nucleus is normal", y = "Area of nucleus") +
-#   facet_wrap(Type ~ Sample) +
-#   theme_bw()
-#
-# save.double(sample.prediction.plot, "sample.prediction.plot.png")
-#
-#
-# # Calculate the coefficient of variation
-# cv <- function(x) sd(x) / mean(x)
-#
-# cv(per.sample.output$test$PredictedType)
-#
-# # Are the abnormals more variable?
-# cv.data <- per.sample.output$test %>%
-#   dplyr::group_by(Sample, Type) %>%
-#   dplyr::summarise(CV = cv(PredictedType))
-#
-# # A bit, but not really in a useful way
-# ggplot(cv.data, aes(x = Type, y = CV)) +
-#   geom_boxplot(size = 0.1) +
-#   geom_jitter(width = 0.1) +
-#   labs(x = "Sample", y = "Coefficient of variation") +
-#   theme_bw()
-#
-#
-# Agregated_prediction_outliers<-per.sample.output$aggregted_prediction %>% dplyr::arrange(MeanPredict)
-
 
 ########################################################################################################################################
 Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
@@ -439,17 +261,7 @@ result <- fertility_data %>%
 Pig_with_in_house_fertility<- Pig_with_morphology_clusters %>%
   left_join(result, by = "Sample")
 
-# # Update TypeINT based on to split datafertility_status
-# Pig_with_in_house_fertility <- Pig_with_in_house_fertility %>%
-#   mutate(
-#     TypeInt = case_when(
-#       grepl("Normal.*fertile", fertility_status) ~ 1,
-#       grepl("Normal.*subfertile", fertility_status) ~ 2,
-#       grepl("Abnormal.*fertile", fertility_status) ~ 3,
-#       grepl("Abnormal.*subfertile", fertility_status) ~ 4,
-#       TRUE ~ NA_integer_ # Add this to handle any unexpected cases
-#     )
-#   )
+
 # Update TypeINT based on to split datafertility_status
 Pig_with_in_house_fertility <- Pig_with_in_house_fertility %>%
   mutate(
@@ -477,45 +289,6 @@ train <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% uni
 test <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% unique(Pig_with_in_house_fertility$Sample)[train.folders == F], ]
 
 Cper.sample.output <- run.profile.glm(train, test)
-#
-# complete.glm.plots <- patchwork::wrap_plots(per.sample.output$by.sample, per.sample.output$predicted.samples,
-#                                             nrow = 1
-# ) + plot_annotation(tag_levels = c("A"))
-#
-#
-#
-# #save.double(complete.glm.plots, "complete.glm.png", height = 85)
-#
-# # Do the abnormal predictions come down mainly to the size? Yes.
-# sample.prediction.plot <- ggplot(per.sample.output$test, aes(x = PredictedType, y = Area_square_pixels)) +
-#   geom_point(data = per.sample.output$test %>% dplyr::select(-Sample, -Type), col = "grey", size = 0.1) +
-#   geom_point(col = "blue", size = 0.1) +
-#   labs(x = "Confidence nucleus is normal", y = "Area of nucleus") +
-#   facet_wrap(Type ~ Sample) +
-#   theme_bw()
-#
-# save.double(sample.prediction.plot, "sample.prediction.plot.png")
-#
-#
-# # Calculate the coefficient of variation
-# cv <- function(x) sd(x) / mean(x)
-#
-# cv(per.sample.output$test$PredictedType)
-#
-# # Are the abnormals more variable?
-# cv.data <- per.sample.output$test %>%
-#   dplyr::group_by(Sample, Type) %>%
-#   dplyr::summarise(CV = cv(PredictedType))
-#
-# # A bit, but not really in a useful way
-# ggplot(cv.data, aes(x = Type, y = CV)) +
-#   geom_boxplot(size = 0.1) +
-#   geom_jitter(width = 0.1) +
-#   labs(x = "Sample", y = "Coefficient of variation") +
-#   theme_bw()
-#
-#
-# Agregated_prediction_outliers<-per.sample.output$aggregted_prediction %>% dplyr::arrange(MeanPredict)
 
 ##############################################################################################################
 # standard data Our split
@@ -539,45 +312,7 @@ train <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pi
 test <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == F], ]
 
 Dper.sample.output <- run.other.glm(train, test)
-#
-# complete.glm.plots <- patchwork::wrap_plots(per.sample.output$by.sample, per.sample.output$predicted.samples,
-#                                             nrow = 1
-# ) + plot_annotation(tag_levels = c("A"))
-#
-#
-#
-# #save.double(complete.glm.plots, "complete.glm.png", height = 85)
-#
-# # Do the abnormal predictions come down mainly to the size? Yes.
-# sample.prediction.plot <- ggplot(per.sample.output$test, aes(x = PredictedType, y = V6)) +
-#   geom_point(data = per.sample.output$test %>% dplyr::select(-Sample, -Type), col = "grey", size = 0.1) +
-#   geom_point(col = "blue", size = 0.1) +
-#   labs(x = "Confidence nucleus is normal", y = "Area of nucleus") +
-#   facet_wrap(Type ~ Sample) +
-#   theme_bw()
-#
-# save.double(sample.prediction.plot, "sample.prediction.plot.png")
-#
-#
-# # Calculate the coefficient of variation
-# cv <- function(x) sd(x) / mean(x)
-#
-# cv(per.sample.output$test$PredictedType)
-#
-# # Are the abnormals more variable?
-# cv.data <- per.sample.output$test %>%
-#   dplyr::group_by(Sample, Type) %>%
-#   dplyr::summarise(CV = cv(PredictedType))
-#
-# # A bit, but not really in a useful way
-# ggplot(cv.data, aes(x = Type, y = CV)) +
-#   geom_boxplot(size = 0.1) +
-#   geom_jitter(width = 0.1) +
-#   labs(x = "Sample", y = "Coefficient of variation") +
-#   theme_bw()
-#
-#
-# Agregated_prediction_outliers<-per.sample.output$aggregted_prediction %>% dplyr::arrange(MeanPredict)
+
 #####################
 
 #Format stitch of the 4 graphs
@@ -621,4 +356,5 @@ scale_y_continuous(limits = c(0, 1))
 
 Patch<- A2 + B2 + C2 + D2
 Patch
-ggsave(filename = "GLM_graph.png",width = 180,height = 180,units = "mm",dpi = 300)
+ggsave(filename = "figures/GLM_graph.png",width = 180,height = 180,units = "mm",dpi = 300)
+
