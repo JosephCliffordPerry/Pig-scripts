@@ -138,16 +138,18 @@ melted_df$Reported_fertility <- ifelse(grepl(subfertile_pattern, sorted_percenta
      scale_fill_manual(values = c(
         "normalPercent" = "white",
          "IntermediaryPercent" = "grey",
-         "ExtremePercent" = "black"  )) +
+         "ExtremePercent" = "black"  ),
+        labels = c("Normal", "Intermediary ", "Extreme")) +
      theme_minimal() +
      theme(axis.text.x = element_blank(),legend.title = element_blank(),
            legend.position = c(0.85, 0.8),  # Specify legend position (x, y)
            legend.box.background = element_rect(color = "black", size = 1),
            legend.key = element_rect(color = "black", size = 1),  # Set legend key outline color
            legend.key.size = unit(1, "lines")) +  # Add box around legend)+
-     facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")
+     facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")+
+  coord_cartesian(ylim = c(0, 0.5))  # Set y-axis limits to show only half of the chart
 
-  ggsave(path =  plot, width = 170, height = 170, units = "mm", dpi = 300)
+  ggsave(filename = "Fertile_subfertile_abnormality_graph_50%.png", width = 170, height = 90, units = "mm", dpi = 300)
 #############################################
 #stacked bar chart grouped by date
 # Split the "sampleid" column into two columns: "date" and "sample_number"

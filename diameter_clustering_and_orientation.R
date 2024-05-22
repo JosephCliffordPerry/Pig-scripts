@@ -8,14 +8,14 @@ clusters <- hkmeans(diameter_data, k = 2)
 # save(clusters,file = "Pig_diameter_clusters.rda")
 load("Pig_diameter_clusters.rda")
 
-load("Pig_diameter_clusters2.rda")
-# save cluster to check it correctly split
 
-  cellid <- pig_data$CellID
-  clust <- clusters$cluster
-  export <- data.frame(CellID = cellid, Cluster = clust)
-
-write.table(export, file = "Pig_diam.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+# # save cluster to check it correctly split
+#
+#   cellid <- pig_data$CellID
+#   clust <- clusters$cluster
+#   export <- data.frame(CellID = cellid, Cluster = clust)
+#
+# write.table(export, file = "Pig_diam.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 ##############################
 #making a consensus for later comparison
 MakeConsensusdf <- function(outlinedata) {
@@ -27,44 +27,19 @@ MakeConsensusdf <- function(outlinedata) {
   return(polygon_df)
 }
 
+
+#make cluster consensus
 make_cluster_consensus <- function(cluster, outlinedata) {
   outline_clusters <- cbind(outlinedata, cluster$cluster)
-
-
-title <- paste(names(cluster[1:(length(cluster) - 1)]), collapse = " ")
-
-words <- str_extract_all(title, "\\b\\w+\\b")[[1]]
-# Extract words and numbers
-extracted2 <- gsub("_\\d+", "", words[1])
-words2 <- unique(gsub("_", " ", extracted2))
-
-numbers <- gsub("[^0-9]+", " ", title)
-
-# Split the numbers by space
-number_parts <- as.numeric(unlist(strsplit(numbers, " ")))
-
-# Determine the range of numbers
-number_range <- paste(min(number_parts, na.rm = TRUE), max(number_parts, na.rm = TRUE), sep = ":")
-if (any(grepl("\\d+:\\d+", number_range))) {
-  # Create new title
-  title <- paste0(words2, sep = " ", number_range, recycle0 = TRUE)
-
-    path_data_xlist <- list()
-    path_data_ylist <- list()
-    for (i in 2:length(number_parts)) {
       # Construct the column names to select
-      selected_Xcolumns <- paste0("Outline_OrientedCoordinates_X_", 0:99)
-      selected_ycolumns <- paste0("Outline_OrientedCoordinates_Y_", 0:99)
+      selected_Xcolumns <- paste0("Outline_OrientedCoordinates_X_", c(0:99,0))
+      selected_ycolumns <- paste0("Outline_OrientedCoordinates_Y_", c(0:99,0))
 
       # Filter the columns based on the constructed names
       path_datax <- outlinedata[selected_Xcolumns]
       path_datay <- outlinedata[selected_ycolumns]
-
-      path_data_xlist[[i]] <- path_datax
-      path_data_ylist[[i]] <- path_datay
-    }
-    path_dataxdf <- as.data.frame(path_data_xlist[2:length(number_parts)])
-    path_dataydf <- as.data.frame(path_data_ylist[2:length(number_parts)])
+    path_dataxdf <- as.data.frame(path_datax)
+    path_dataydf <- as.data.frame(path_datay)
     path_datadf <- cbind(path_dataxdf, path_dataydf)
     path_clusters <- cbind(path_datadf, cluster$cluster)
     a <- list()
@@ -87,8 +62,6 @@ if (any(grepl("\\d+:\\d+", number_range))) {
       a2[[j]] <- path_consensus_df
     }
 
-
-
     # Combine the individual consensus dataframes into one faceted dataframe
     faceted_df <- dplyr::bind_rows(a)
     faceted_path_df <- dplyr::bind_rows(a2)
@@ -104,49 +77,22 @@ if (any(grepl("\\d+:\\d+", number_range))) {
     colourfactor <- factor(faceted_df$facet)
     consensus <- ggplot(faceted_df, aes(Column2, Column1, fill = colourfactor)) +
       geom_polygon() +
-      geom_text(aes(x = Inf, y = Inf, label = facet_count), vjust = 1.5, hjust = 1.5) +
-      #geom_path(data = faceted_path_df, aes(x = faceted_path_df$Column2, y = faceted_path_df$Column1), linewidth = 1.5) +
+      geom_text(aes(x = Inf, y = Inf, label = comma(facet_count)), vjust = 10, hjust = 1.5) +
+      geom_path(data = faceted_path_df, aes(x = Column2, y = Column1, label = NULL), linewidth = 1.5) +
       facet_wrap(faceted_df$facet) +
-      theme_minimal()# +
-      #coord_fixed(ratio = 1, xlim = NULL, ylim = NULL, expand = TRUE, clip = "on")
+      theme(legend.position = "none", #remove legend
+            axis.text = element_blank(),  # Remove axis text
+            axis.ticks = element_blank(),  # Remove axis ticks
+            panel.grid = element_blank(),  # Remove grid lines
+            panel.background = element_blank(),  # Remove panel background
+            plot.background = element_blank(),# Remove plot background)
+            strip.text = element_blank()
+            )+
+      coord_fixed()
 consensus
-} #else {
-#     title <- paste0(words2, sep = " ", recycle0 = TRUE)
-#
-#     a <- list()
-#
-#     # Calculate the number of rows in each facet
-#     facet_counts <- as.data.frame(table(cluster$cluster))
-#     facet_count_vector <- facet_counts[[2]]
-#     for (j in 1:max(outline_clusters$`cluster$cluster`)) {
-#       A1 <- outline_clusters %>% filter(`cluster$cluster` == j)
-#
-#       consensus_df <- MakeConsensusdf(A1)
-#
-#       # Add a facet column to the consensus_df
-#       consensus_df$facet <- j
-#
-#       # Add facet count column
-#       consensus_df$facet_count <- facet_count_vector[j]
-#
-#       a[[j]] <- consensus_df
-#     }
-#
-#
-#
-#     # Combine the individual consensus dataframes into one faceted dataframe
-#     faceted_df <- dplyr::bind_rows(a)
-#
-#     consensus <- ggplot(faceted_df, aes(Column2, Column1, fill = colourfactor)) +
-#       geom_polygon() +
-#       geom_text(aes(x = Inf, y = Inf, label = facet_count), vjust = 1.5, hjust = 1.5) +
-#       facet_wrap(faceted_df$facet) +
-#       theme_minimal() +
-#       coord_fixed(ratio = 1, xlim = NULL, ylim = NULL, expand = TRUE, clip = "on")
-#   }
-#
-#   return(consensus)
-# }
+}
+ggsave(filename = "diameterConsensus.png",width = 90,height = 90,units = "mm")
+
 
 ########
 #get outlines
@@ -206,8 +152,22 @@ diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
   #     "1" = "red",
   #     "2"= "skyblue"
 #   )) +
-  labs(title = "UMAP on diameter profile", x = "UMAP1", y = "UMAP2", color = "clusters")+
-  theme(legend.position = "none")
+  labs(title = element_blank(), x = element_blank(), y = element_blank(), color = "clusters")+
+  theme(legend.position = "none", #remove legend
+        axis.text = element_blank(),  # Remove axis text
+        axis.ticks = element_blank(),  # Remove axis ticks
+        panel.grid = element_blank(),  # Remove grid lines
+        panel.background = element_blank(),  # Remove panel background
+        plot.background = element_blank()  # Remove plot background)
+)
+  #ggsave(filename = "diameterUmapClean.png",width = 90,height = 90,units = "mm")
 
-  ggsave(filename = "diameterUmap.png",width = 90,height = 90,units = "mm")
-#beans (for some reason this is a load bearing comment)
+
+  source("Ben's_common_functions.R")
+Pig_with_clusters<-cbind(pig_data,clusters$cluster)
+
+median_profiles<-calculate.median.profile(Pig_with_clusters,"Diameter",`clusters$cluster`)
+names(median_profiles)[names(median_profiles) == "clusters$cluster"] <- "cluster"
+median_profile_graph<-plot.profile(median_profiles,"cluster" )
+median_profile_graph<-median_profile_graph+theme(legend.position = "none")
+ggsave(filename = "median_profile_graph.png",width = 180,height = 90,units = "mm",)

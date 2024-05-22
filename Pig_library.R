@@ -9,3 +9,4 @@ library(umap)
 library(ggplot2)
 library(patchwork)
 
+library(scales)
