@@ -8,9 +8,6 @@ set.seed(08000)
 clusters <- hkmeans(diameter_data, k = 2)
 # save(clusters,file = "Pig_diameter_clusters.rda")
 
-
-
-
 ##############################
 #making a consensus for later comparison
 MakeConsensusdf <- function(outlinedata) {

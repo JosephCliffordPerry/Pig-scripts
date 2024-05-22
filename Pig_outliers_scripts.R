@@ -49,3 +49,4 @@ new_values <- match(Outliers2[,2], unique_values)
  # Replace the values in the column with the new values
    Outliers2[,2] <- new_values
 write.table(Outliers2, file = "data/Pig_outliers4.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
