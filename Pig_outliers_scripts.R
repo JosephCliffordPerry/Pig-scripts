@@ -54,31 +54,3 @@ new_values <- match(Outliers2[,2], unique_values)
  # Replace the values in the column with the new values
    Outliers2[,2] <- new_values
 write.table(Outliers2, file = "Pig_outliers4.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-
-
-##################################################
-#Compare outlier clusters
-library(fossil)
-other_outliers<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
-
-load("Pig_outliers")
-
-other_outlier_subset_data <- other_outliers[other_outliers$V1 %in% hamming_data_from_outlier$UUID, ]
-
-Vec1<-other_outlier_subset_data$V2
-Vec2<-hamming_data_from_outlier$Clustering_file
-#Outliers 4
-
-Vec1[Vec1 %in% c(5, 6)] <- 2
-Vec1[Vec1 %in% c(4,7,8)] <- 3
-
-Vec2[Vec2 %in% c(2,3,7,6)] <- 3
-Vec2[Vec2 %in% c(4,5,8)] <- 2
-
-rand.index(group1 = Vec1,group2 = Vec2)
-adj.rand.index(group1 = Vec1,group2 = Vec2)
-
-# > rand.index(group1 = Vec1,group2 = Vec2)
-# [1] 0.8246677
-# > adj.rand.index(group1 = Vec1,group2 = Vec2)
-# [1] 0.4591319

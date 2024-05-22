@@ -2,19 +2,7 @@
 # The landmarks were lifted over to my own nmd file for clean stats export
 
 ######################## Imports #################
-library(tidyverse)
-library(umap)
-library(cluster)
-library(dendextend)
-library(data.table)
-library(patchwork)
-library(modEvA) # plotting GLM outputs
-library(boot) #
-library(caret) # cross - validation methods
-library(randomForest)
-library(fdm2id)
 
-library(caTools)
 
 source("Ben's_common_functions.R")
 
@@ -279,7 +267,7 @@ make_outlier_cluster <- function(profile_data, profile_type) {
 pig.data <- read.nma.stats("data/real_Merge_of_all_pig_datasets_stats.txt") #- my dataset has 20795 sperm?
 pig.data <- remove.poor.edge.detection(pig.data) # removes a few hundred
 
-######################## Targeted GLMs on angle radius and diameter outliers using the outlier matrix####################
+#### Targeted GLMs on angle radius and diameter outliers using the outlier matrix####
 set.seed(123)
 get_outlier_features <- function(profile.data) {
   profile.data <- dplyr::select(profile.data, contains("profile"))
@@ -351,7 +339,7 @@ Aper.sample.output <- run.profile.glm(train, test)
 
 # Performs much better - we can pretty much be sure of fails
 
-################
+####standard measurement model####
 # standard measuremnts used in two papers
 # (Banaszewska and Andraszek, 2021)
 #(Saravia et al., 2007)
