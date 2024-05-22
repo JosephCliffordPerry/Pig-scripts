@@ -1,20 +1,8 @@
-pig_data<-read.table("D:/Full_pig_project/real_Merge_of_all_pig_datasets_stats.txt",sep = "\t",header = TRUE)
-#load("Pig_outliers")
-Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
 
-# #rename_ids
-# renamedham<-hamming_data_from_outlier %>% rename(
-#   CellID = UUID
-# )
 #alternative clusterings
 renamedham<-Outliers4 %>% rename(
       CellID = V1,
 Clustering_file = V2)
-#alternative clustering
-# renamedham<-as.data.frame(Manual_clusters) %>% rename(
-#        CellID = V1,
-# Clustering_file = V2
-#    )
 
 # Define the regular expression patterns
 subfertile_pattern <- "subfertile"
@@ -51,17 +39,6 @@ for (i in 1:length(Sample_list_with_clusters)) {
   Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
   Extremephenotype1<-sum(pig$Clustering_file == 4, pig$Clustering_file ==3, pig$Clustering_file ==7,pig$Clustering_file ==8)
   Extremephenotype1percent<-(Extremephenotype1/nrow(pig))*100
-  #first outlier cluster identity
-  # Extremephenotype1<-sum(pig$Clustering_file == 2, pig$Clustering_file ==3, pig$Clustering_file ==7,pig$Clustering_file ==6)
-  # Extremephenotype1percent<-(Extremephenotype1/nrow(pig))*100
-  # Intermediaryphenotype1<-sum(pig$Clustering_file == 4,pig$Clustering_file ==5,pig$Clustering_file ==8)
-  # Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
-  #Manual filter
-  #  Intermediaryphenotype1<-sum(pig$Clustering_file == 4,pig$Clustering_file ==3 )
-  # Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
-  # Extremephenotype1<-sum(pig$Clustering_file == 2)
-  # Extremephenotype1percent<-(Extremephenotype1/nrow(pig))*100
-  #
 
 
   # Create a row with the results
@@ -119,6 +96,8 @@ ggplot(melted_df_normalized, aes(x = factor(Sampleid), y = value, fill = variabl
   )) +
   theme_minimal() +
   theme(axis.text.x = element_blank(),legend.title = element_blank())
+#save graph
+ggsave(filename = "figures/Sample_abnormality_graph.png",width = 180,height = 90,units = "mm",)
 
 ###############################################
 # add facets
@@ -130,8 +109,7 @@ fertile_pattern <- "fertile"
 # Add a new column based on the counts
 melted_df$Reported_fertility <- ifelse(grepl(subfertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "subfertile",
                                       ifelse(grepl(fertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "fertile", NA))
-
-  plot<-ggplot(melted_df, aes(x = factor(Sampleid), y = value, fill = variable)) +
+ggplot(melted_df, aes(x = factor(Sampleid), y = value, fill = variable)) +
      geom_col(position = "fill",width = 1) +
      labs(title =  element_blank(),
           x = "Sample", y = "Proportion") +
@@ -149,7 +127,7 @@ melted_df$Reported_fertility <- ifelse(grepl(subfertile_pattern, sorted_percenta
      facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")+
   coord_cartesian(ylim = c(0, 0.5))  # Set y-axis limits to show only half of the chart
 
-  ggsave(filename = "Fertile_subfertile_abnormality_graph_50%.png", width = 170, height = 90, units = "mm", dpi = 300)
+ggsave(filename = "figures/Fertile_subfertile_abnormality_graph.png", width = 170, height = 90, units = "mm", dpi = 300)
 #############################################
 #stacked bar chart grouped by date
 # Split the "sampleid" column into two columns: "date" and "sample_number"
@@ -191,3 +169,4 @@ result_df$date <-data$date
     theme_minimal() +
     theme(axis.text.x = element_blank(),legend.title = element_blank())+
     facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")
+ggsave(filename = "figures/Fertile_subfertile_date_abnormality_graph.png", width = 170, height = 90, units = "mm", dpi = 300)

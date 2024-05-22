@@ -20,15 +20,10 @@ make_outlier_cluster <- function(profile_data, profile_type) {
   boolean_matrix <- get_outlier_features(profile_data)
   #true boolean double
   tboolean <- which(boolean_matrix, arr.ind = TRUE)
- # #set a 5% threshold of the dataset
- # outlier_threshold <- (nrow(profile_data) / 20)
  # make table of true values
   booleancount <- table(tboolean[, 1])
   #cell ids
   outliercluster <- cbind(pig_data$CellID, 1)
-  ## take the top 5% strangest values
-  ## outlier_rows <- names(head(sort(booleancount, decreasing = TRUE), outlier_threshold))
-
   #try and take a reasonable portion
   outlier_rows <- names( which((booleancount > mean(booleancount))))
   #format dataframe
@@ -53,4 +48,4 @@ new_values <- match(Outliers2[,2], unique_values)
 
  # Replace the values in the column with the new values
    Outliers2[,2] <- new_values
-write.table(Outliers2, file = "Pig_outliers4.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(Outliers2, file = "data/Pig_outliers4.txt", sep = "\t", quote = FALSE, row.names = FALSE)

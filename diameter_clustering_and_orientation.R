@@ -3,19 +3,14 @@
 #cluster
 
 diameter_data <- pig_data %>% dplyr::select(starts_with("Diameter_profile_"))
-#
+
+set.seed(08000)
 clusters <- hkmeans(diameter_data, k = 2)
 # save(clusters,file = "Pig_diameter_clusters.rda")
-load("Pig_diameter_clusters.rda")
 
 
-# # save cluster to check it correctly split
-#
-#   cellid <- pig_data$CellID
-#   clust <- clusters$cluster
-#   export <- data.frame(CellID = cellid, Cluster = clust)
-#
-# write.table(export, file = "Pig_diam.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+
+
 ##############################
 #making a consensus for later comparison
 MakeConsensusdf <- function(outlinedata) {
@@ -91,13 +86,13 @@ make_cluster_consensus <- function(cluster, outlinedata) {
       coord_fixed()
 consensus
 }
-ggsave(filename = "diameterConsensus.png",width = 90,height = 90,units = "mm")
+ggsave(filename = "figures/diameterConsensus.png",width = 90,height = 90,units = "mm")
 
 
 ########
 #get outlines
 outlinedata <- pig_data %>% dplyr::select(starts_with("Outline_Oriented"))
-#use NMA companion consensus function
+#use consensus function
 graph1 <- make_cluster_consensus(cluster = clusters, outlinedata = outlinedata)
 
 
@@ -120,14 +115,9 @@ new_column_names_diameter <- paste0("Diameter_profile_", new_order)
 new_column_names_radius <- paste0("Radius_profile_", new_order)
 # Generate the new column names for X-coordinates
 new_column_names_x <- paste0("Outline_OrientedCoordinates_X_", new_order)
-
-# Generate the new column names for Y-coordinates
-#new_column_names_y <- paste0("Outline_OrientedCoordinates_y_", new_order)
 # Rename Angle, Diameter, and Radius profile columns
 Long_on_right_inverted_outlines_swapped <- Long_on_right_inverted_outlines %>%
- # mutate(across(starts_with("Outline_OrientedCoordinates_X"), ~ . - 2 * .)) %>%
   rename_with(~ new_column_names_x, starts_with("Outline_OrientedCoordinates_X")) %>%
-  #rename_with(~ new_column_names_y, starts_with("Outline_OrientedCoordinates_y")) %>%
   rename_with(~ new_column_names_angle, starts_with("Angle_profile_")) %>%
   rename_with(~ new_column_names_diameter, starts_with("Diameter_profile_")) %>%
   rename_with(~ new_column_names_radius, starts_with("Radius_profile_"))
@@ -140,18 +130,13 @@ graph2 <- make_cluster_consensus(cluster = clusters, outlinedata = reoriented_ou
 graph2
 
 # make diameter umap
-library(umap)
-library(ggplot2)
+
 set.seed(08000)
 diameterumap <- umap(diameter_data, preserve.seed = TRUE)
 diameterumap_clusters<- as.data.frame(cbind(diameterumap[["layout"]],as.factor(clusters$cluster)))
 diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
   ggplot(data = diameterumap_clusters, aes(V1, V2, color = V3)) +
    geom_point()+
-  #   scale_color_manual(values = c(
-  #     "1" = "red",
-  #     "2"= "skyblue"
-#   )) +
   labs(title = element_blank(), x = element_blank(), y = element_blank(), color = "clusters")+
   theme(legend.position = "none", #remove legend
         axis.text = element_blank(),  # Remove axis text
@@ -160,14 +145,13 @@ diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
         panel.background = element_blank(),  # Remove panel background
         plot.background = element_blank()  # Remove plot background)
 )
-  #ggsave(filename = "diameterUmapClean.png",width = 90,height = 90,units = "mm")
+ggsave(filename = "figures/diameterUmapClean.png",width = 90,height = 90,units = "mm")
 
 
-  source("Ben's_common_functions.R")
 Pig_with_clusters<-cbind(pig_data,clusters$cluster)
 
 median_profiles<-calculate.median.profile(Pig_with_clusters,"Diameter",`clusters$cluster`)
 names(median_profiles)[names(median_profiles) == "clusters$cluster"] <- "cluster"
 median_profile_graph<-plot.profile(median_profiles,"cluster" )
-median_profile_graph<-median_profile_graph+theme(legend.position = "none")
-ggsave(filename = "median_profile_graph.png",width = 180,height = 90,units = "mm",)
+#median_profile_graph<-median_profile_graph+theme(legend.position = "none")
+ggsave(filename = "figures/median_profile_graph.png",width = 180,height = 90,units = "mm",)

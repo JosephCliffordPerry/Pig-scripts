@@ -2,9 +2,9 @@
 diameter_data <- pig_data %>% dplyr::select(starts_with("Diameter_profile_"))
 #diameters
 D1 <- diameter_data
-d1 <- apply(A1[1:100], 2, median)
-d2 <- apply(A1[1:100], 2, quantile, probs = 0.25)
-d3 <- apply(A1[1:100], 2, quantile, probs = 0.75)
+d1 <- apply(D1[1:100], 2, median)
+d2 <- apply(D1[1:100], 2, quantile, probs = 0.25)
+d3 <- apply(D1[1:100], 2, quantile, probs = 0.75)
 
 # Combine the matrices for each cluster into a list
 d <- list(median = a1, Q25 = a2, Q75 = a3)
@@ -40,5 +40,5 @@ Angle_graph<-ggplot(a_df, aes(x = index, y = median)) +
 Figure1_graph<-Angle_graph/Diameter_graph
 
 #ggsave 125mm by 112mm
-ggsave("Figure1_graph.png",plot = Figure1_graph,width = 125,height = 112,units = "mm")
+ggsave("figures/Figure1_angle_graph.png",plot = Figure1_graph,width = 125,height = 112,units = "mm")
 
