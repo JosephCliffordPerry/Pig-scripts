@@ -26,7 +26,7 @@ IQR_per_sample_Intermediary <- aggregate(IntermediaryPercent ~ sample_number, da
 IQR_per_date_Extreme <- aggregate(ExtremePercent ~ date, data = data, FUN = IQR)
 IQR_per_sample_Extreme <- aggregate(ExtremePercent ~ sample_number, data = data, FUN = IQR)
 
-mean(IQR_per_date_normal $normalPercent)
+mean(IQR_per_date_normal$normalPercent)
 mean(IQR_per_sample_normal$normalPercent)
 
 mean(IQR_per_date_Intermediary$IntermediaryPercent)
@@ -62,15 +62,18 @@ sample_date<-cbind(data$date,data$sample_number)
 
 PlotX <- as.Date(data$date,format = "%d.%m.%y")
 ploty <- data$sample_number
-plot_data<-as.data.frame(cbind(Plotx = as.character(PlotX),ploty =ploty))
+sum_vec<-data$normalCount+data$Intermediary1Count+data$Extreme1Count
+# Step 2: Scale the resulting vector to be between 1 and 10
+plot_size <- ((sum_vec - min(sum_vec)) / (max(sum_vec) - min(sum_vec))) * 4 + 1
+plot_data<-as.data.frame(cbind(Plotx = as.character(PlotX),ploty =ploty,plot_size = plot_size))
 
 ggplot(plot_data, aes(x =Plotx, y = ploty)) +
-  geom_point() +
+  geom_point(size = plot_size) +
   geom_line(aes(group = ploty), color = "red") +
   labs(title = "Timeline of Samples",
        x = "Date",
        y = "Sample Label") +
-  theme_minimal() +
+  theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
 ggsave(filename = "figures/Sample_date_timeline.png", width = 170, height = 90, units = "mm", dpi = 300)
 

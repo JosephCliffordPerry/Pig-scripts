@@ -92,13 +92,13 @@ outlinedata <- pig_data %>% dplyr::select(starts_with("Outline_Oriented"))
 #use consensus function
 graph1 <- make_cluster_consensus(cluster = clusters, outlinedata = outlinedata)
 
-
+graph1
 ############
 #reorientating via inversion of the X of group2
 
-Pigclus<-cbind(pig_data,cluster$cluster)
+Pigclus<-cbind(pig_data,clusters$cluster)
 #group 2 selected
-Long_on_right<- Pigclus[Pigclus$`cluster$cluster` == 2, ]
+Long_on_right<- Pigclus[Pigclus$`clusters$cluster` == 2, ]
 
 Long_on_right_inverted_outlines <- Long_on_right %>%
   mutate(across(starts_with("Outline_OrientedCoordinates_X"), ~ . - 2 * .))
@@ -120,10 +120,12 @@ Long_on_right_inverted_outlines_swapped <- Long_on_right_inverted_outlines %>%
   rename_with(~ new_column_names_radius, starts_with("Radius_profile_"))
 
 
-Long_on_left<- Pigclus[Pigclus$`cluster$cluster` == 1, ]
+Long_on_left<- Pigclus[Pigclus$`clusters$cluster` == 1, ]
 reoriented_outline_pig_data<-rbind(Long_on_right_inverted_outlines_swapped,Long_on_left)
 reoriented_outlinedata <-reoriented_outline_pig_data%>% dplyr::select(starts_with("Outline_Oriented"))
+
 graph2 <- make_cluster_consensus(cluster = clusters, outlinedata = reoriented_outlinedata)
+graph2 <-graph2 + scale_fill_manual(values = c("#FAE149","#00204D"))
 graph2
 
 # make diameter umap
@@ -132,7 +134,7 @@ set.seed(08000)
 diameterumap <- umap(diameter_data, preserve.seed = TRUE)
 diameterumap_clusters<- as.data.frame(cbind(diameterumap[["layout"]],as.factor(clusters$cluster)))
 diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
-  ggplot(data = diameterumap_clusters, aes(V1, V2, color = V3)) +
+ggplot(data = diameterumap_clusters, aes(V1, V2, color = V3)) +
    geom_point()+
   labs(title = element_blank(), x = element_blank(), y = element_blank(), color = "clusters")+
   theme(legend.position = "none", #remove legend
@@ -140,15 +142,26 @@ diameterumap_clusters$V3 <- factor(diameterumap_clusters$V3)
         axis.ticks = element_blank(),  # Remove axis ticks
         panel.grid = element_blank(),  # Remove grid lines
         panel.background = element_blank(),  # Remove panel background
-        plot.background = element_blank()  # Remove plot background)
+        plot.background = element_blank())+  # Remove plot background
+  scale_color_manual(values = c("#FAE149","#00204D")
 )
-ggsave(filename = "figures/diameterUmapClean.png",width = 90,height = 90,units = "mm")
+ggsave(filename = "figures/consensus_cells.png",width = 90,height = 90,units = "mm")
 
 
-Pig_with_clusters<-cbind(pig_data,clusters$cluster)
 
-median_profiles<-calculate.median.profile(Pig_with_clusters,"Diameter",`clusters$cluster`)
+
+median_profiles<-calculate.median.profile(Pigclus,"Diameter",`clusters$cluster`)
 names(median_profiles)[names(median_profiles) == "clusters$cluster"] <- "cluster"
+median_profiles$cluster<-as.character(median_profiles$cluster)
 median_profile_graph<-plot.profile(median_profiles,"cluster" )
-#median_profile_graph<-median_profile_graph+theme(legend.position = "none")
+median_profile_graph <-median_profile_graph  + scale_fill_manual(values = c("#FAE149","#00204D"))
+median_profile_graph <-median_profile_graph  + scale_color_manual(values = c("#FAE149","#00204D"))
+median_profile_graph<-median_profile_graph+theme_bw()
+median_profile_graph<-median_profile_graph+theme(legend.position = "none")
+#scale graph
+median_profile_graph$data$Median<-median_profile_graph$data$Median/15.33
+median_profile_graph$data$Q25<-median_profile_graph$data$Q25/15.33
+median_profile_graph$data$Q75<-median_profile_graph$data$Q75/15.33
+median_profile_graph<-median_profile_graph+ labs(x = "Index", y = "Diameter (µm)")
 ggsave(filename = "figures/median_profile_graph.png",width = 180,height = 90,units = "mm",)
+

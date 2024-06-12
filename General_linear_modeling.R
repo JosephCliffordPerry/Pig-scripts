@@ -83,9 +83,8 @@ run.profile.glm <- function(train, test) {
 
 
   pred.sample.plot <- ggplot(by.sample, aes(x = Type, y = MeanPredict)) +
-    geom_hline(yintercept = 0.5) +
     geom_point() +
-    labs(y = "Mean of sample", x = "Type") +
+    labs(y = "Mean of sample predicted fertile", x = "Type") +
     theme_bw()
 
   return(list(
@@ -143,9 +142,8 @@ run.other.glm <- function(train, test) {
 
 
   pred.sample.plot <- ggplot(by.sample, aes(x = Type, y = MeanPredict)) +
-    geom_hline(yintercept = 0.5) +
     geom_point() +
-    labs(y = "Mean of sample", x = "Type") +
+    labs(y = "Mean of sample predicted fertile", x = "Type") +
     theme_bw()
 
   return(list(
@@ -167,7 +165,16 @@ set.seed(08000)
 # Data from reanalysis of raw images - 21759 nuclei
 # Exported from 2.2.0 so diameter profiles are absolute
 
-pig.data <- read.nma.stats("data/real_Merge_of_all_pig_datasets_stats.txt") #- my dataset has 20795 sperm?
+pig.data <- pig_data %>%
+  tidyr::separate_wider_delim(Centre_of_mass, " - ", names = c("CoMX", "CoMY")) %>%
+    dplyr::mutate(
+    Type = stringr::str_extract(Folder, "(sub)?fertile"),
+    Type = ifelse(Type == "fertile", "Normal", "Abnormal"),
+    CoMX = as.numeric(CoMX), CoMY = as.numeric(CoMY),
+    TypeInt = as.factor(ifelse(Type == "Normal", 1, 0)))
+folders <- unique(pig.data$Folder)
+pig.data$Sample <- paste0(pig.data$Type, "_", sapply(pig.data$Folder, function(f) which(folders == f)))
+
 pig.data <- remove.poor.edge.detection(pig.data) # removes a few hundred
 
 #### Targeted GLMs on angle radius and diameter outliers using the outlier matrix####
@@ -234,11 +241,11 @@ test <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig
 Bper.sample.output <- run.other.glm(train, test)
 
 ########################################################################################################################################
-Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
+#Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = "\t",header = TRUE)
 
 #adding our categories that are based on our detected abnormality instead of the breeder reported on that allows for a different divide based only on morphology
 
-renamedham<-Outliers4 %>% rename(
+renamedham<-as.data.frame(Outliers2) %>% rename(
   CellID = V1,
   Morphology_cluster = V2)
 
@@ -253,7 +260,7 @@ result <- fertility_data %>%
     non_one_percentage = mean(Pig_with_morphology_clusters.Morphology_cluster != 1) * 100
   ) %>%
   mutate(
-    fertility_status = ifelse(non_one_percentage > 20, paste0(Sample, "_subfertile"), paste0(Sample, "_fertile"))
+    fertility_status = ifelse(non_one_percentage > 20, paste0(Sample, "_Subfertile"), paste0(Sample, "_Fertile"))
   ) %>%
   select(Sample, fertility_status)
 
@@ -266,54 +273,56 @@ Pig_with_in_house_fertility<- Pig_with_morphology_clusters %>%
 Pig_with_in_house_fertility <- Pig_with_in_house_fertility %>%
   mutate(
     TypeInt = case_when(
-      grepl("_fertile", fertility_status) ~ 0L,
-      grepl("_subfertile", fertility_status) ~ 1L,
+      grepl("_Fertile", fertility_status) ~ 1L,
+      grepl("_Subfertile", fertility_status) ~ 0L,
 
       TRUE ~ NA_integer_ # Add this to handle any unexpected cases
     ),
       Type  = case_when(
-        grepl("_fertile", fertility_status) ~ "fertile",
-        grepl("_subfertile", fertility_status) ~ "subfertile",
+        grepl("_Fertile", fertility_status) ~ "Fertile",
+        grepl("_Subfertile", fertility_status) ~ "Subfertile",
 
         TRUE ~ NA_character_ # Add this to handle any unexpected cases
     ),
-    TypeInt = factor(TypeInt, levels = c(0, 1), labels = c("0", "1"))
+    TypeInt = factor(TypeInt, levels = c(0, 1), labels = c("1", "0"))
   )
-
-#Run linear model on data
-# dividing the samples into groups
-train.folders <- sample.split(unique(Pig_with_in_house_fertility$Sample), SplitRatio = 0.7)
-
-# select all cells from sample groups assigned as train or test
-train <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% unique(Pig_with_in_house_fertility$Sample)[train.folders == T], ]
-test <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% unique(Pig_with_in_house_fertility$Sample)[train.folders == F], ]
-
-Cper.sample.output <- run.profile.glm(train, test)
-
-##############################################################################################################
-# standard data Our split
-
-#Run pig with in house fertility firstPig_with_in_house_fertility
-
-pig_standard_measuremnts<-as.data.frame(cbind(Sample = Pig_with_in_house_fertility$Sample,Pig_with_in_house_fertility$Perimeter_pixels,Pig_with_in_house_fertility$Regularity,Pig_with_in_house_fertility$Bounding_width_pixels,Pig_with_in_house_fertility$Bounding_height_pixels,Pig_with_in_house_fertility$Area_square_pixels,Pig_with_in_house_fertility$Elongation,Pig_with_in_house_fertility$Ellipticity,Pig_with_in_house_fertility$Circularity))
-
-# Convert all columns except the first to numeric
-pig_standard_measuremnts[, -1] <- lapply(pig_standard_measuremnts[, -1], as.numeric)
-
-pig_standard_measuremnts$Type<-Pig_with_in_house_fertility$Type
-pig_standard_measuremnts$TypeInt<-Pig_with_in_house_fertility$TypeInt
-
-
-train.folders <- sample.split(unique(pig_standard_measuremnts$Sample), SplitRatio = 0.7)
-
-
-# select all cells from sample groups assigned as train or test
-train <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == T], ]
-test <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == F], ]
-
-Dper.sample.output <- run.other.glm(train, test)
-
-#####################
+# Remove numbers from the string
+Fertility_change <- gsub("[0-9]", "", unique(Pig_with_in_house_fertility$fertility_status) )
+table(Fertility_change)
+# #Run linear model on data
+# # dividing the samples into groups
+# train.folders <- sample.split(unique(Pig_with_in_house_fertility$Sample), SplitRatio = 0.7)
+#
+# # select all cells from sample groups assigned as train or test
+# train <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% unique(Pig_with_in_house_fertility$Sample)[train.folders == T], ]
+# test <- Pig_with_in_house_fertility[Pig_with_in_house_fertility$Sample %in% unique(Pig_with_in_house_fertility$Sample)[train.folders == F], ]
+#
+# Cper.sample.output <- run.profile.glm(train, test)
+#
+# ##############################################################################################################
+# # standard data Our split
+#
+# #Run pig with in house fertility firstPig_with_in_house_fertility
+#
+# pig_standard_measuremnts<-as.data.frame(cbind(Sample = Pig_with_in_house_fertility$Sample,Pig_with_in_house_fertility$Perimeter_pixels,Pig_with_in_house_fertility$Regularity,Pig_with_in_house_fertility$Bounding_width_pixels,Pig_with_in_house_fertility$Bounding_height_pixels,Pig_with_in_house_fertility$Area_square_pixels,Pig_with_in_house_fertility$Elongation,Pig_with_in_house_fertility$Ellipticity,Pig_with_in_house_fertility$Circularity))
+#
+# # Convert all columns except the first to numeric
+# pig_standard_measuremnts[, -1] <- lapply(pig_standard_measuremnts[, -1], as.numeric)
+#
+# pig_standard_measuremnts$Type<-Pig_with_in_house_fertility$Type
+# pig_standard_measuremnts$TypeInt<-Pig_with_in_house_fertility$TypeInt
+#
+#
+# train.folders <- sample.split(unique(pig_standard_measuremnts$Sample), SplitRatio = 0.7)
+#
+#
+# # select all cells from sample groups assigned as train or test
+# train <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == T], ]
+# test <- pig_standard_measuremnts[pig_standard_measuremnts$Sample %in% unique(pig_standard_measuremnts$Sample)[train.folders == F], ]
+#
+# Dper.sample.output <- run.other.glm(train, test)
+#
+# #####################
 
 #Format stitch of the 4 graphs
 
@@ -339,22 +348,27 @@ B2 <-B+
   scale_x_discrete(labels = c("Subfertile", "Fertile"))+  # Change X-axis labels
 scale_y_continuous(limits = c(0, 1))
 
+#
+# C2 <-C+
+#   labs(
+#     x = "20% Abnormality Threshold",   # Change X-axis label
+#     title = "C"  # Change plot title
+#   )+
+# scale_y_continuous(limits = c(0, 1))
+#
+# # Convert the character variable to a factor with reversed levels
+# C2$data$Type <- factor(C2$data$Type, levels = rev(unique(C2$data$Type)))
+# # Update the plot with the new factor variable and reversed x-axis
+# C2 <- C2 + scale_x_discrete(limits = rev(levels(C2$data$Type)))
+# # D2 <-D+
+# #   labs(
+# #     x = "20% Abnormality Fertility Threshold",   # Change X-axis label
+# #     title = "D"  # Change plot title
+# #   )+
+# # scale_y_continuous(limits = c(0, 1))
 
-C2 <-C+
-  labs(
-    x = "20% Abnormality Fertility Threshold",   # Change X-axis label
-    title = "C"  # Change plot title
-  )+
-scale_y_continuous(limits = c(0, 1))
 
-D2 <-D+
-  labs(
-    x = "20% Abnormality Fertility Threshold",   # Change X-axis label
-    title = "D"  # Change plot title
-  )+
-scale_y_continuous(limits = c(0, 1))
-
-Patch<- A2 + B2 + C2 + D2
+Patch<- A2 + B2
 Patch
 ggsave(filename = "figures/GLM_graph.png",width = 180,height = 180,units = "mm",dpi = 300)
 

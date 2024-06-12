@@ -1,6 +1,6 @@
 
 #alternative clusterings
-renamedham<-Outliers4 %>% rename(
+renamedham<-as.data.frame(Outliers2) %>% rename(
       CellID = V1,
 Clustering_file = V2)
 
@@ -12,12 +12,13 @@ fertile_pattern <- "fertile"
 # Add a new column based on the counts
 pig_data$Reported_fertility <- ifelse(grepl(subfertile_pattern, pig_data$Folder, ignore.case = TRUE), "subfertile",
                                       ifelse(grepl(fertile_pattern, pig_data$Folder, ignore.case = TRUE), "fertile", NA))
-
+#prepare data for splitting into dataframe
 Pigham<-merge(pig_data,renamedham,by = "CellID")
 Pigham$Folder <- paste( Pigham$Folder, Pigham$Reported_fertility,sep = "_")
 grouped_Pigham<-Pigham %>% group_by(Folder)
 Sample_list_with_clusters<-list()
 Sample_list_with_clusters<-group_split(grouped_Pigham)
+#make a empty dataframe with many different
 result_df <- data.frame(
   Sampleid = character(),
   normalCount = numeric(),
@@ -33,8 +34,8 @@ for (i in 1:length(Sample_list_with_clusters)) {
   pig<- data.frame(rbind(Sample_list_with_clusters[[i]]))
   normal<-sum(pig$Clustering_file == 1)
   normalpercent<-(normal/nrow(pig))*100
-  sample<-basename(pig[1,6])
-  #Outliers 4
+  sample<-basename(pig[1,7])
+  #Outliers data selection
   Intermediaryphenotype1<-sum(pig$Clustering_file == 2,pig$Clustering_file ==5,pig$Clustering_file ==6)
   Intermediaryphenotype1percent<-(Intermediaryphenotype1/nrow(pig))*100
   Extremephenotype1<-sum(pig$Clustering_file == 4, pig$Clustering_file ==3, pig$Clustering_file ==7,pig$Clustering_file ==8)
@@ -43,7 +44,7 @@ for (i in 1:length(Sample_list_with_clusters)) {
 
   # Create a row with the results
   # Get the sample name
-  sample_name <- basename(pig[1, 6])
+  sample_name <- basename(pig[1, 7])
 
   # Add the results to the data frame
   result_df <- rbind( result_df,
@@ -102,32 +103,41 @@ ggsave(filename = "figures/Sample_abnormality_graph.png",width = 180,height = 90
 ###############################################
 # add facets
 # Define the regular expression patterns
-subfertile_pattern <- "subfertile"
-fertile_pattern <- "fertile"
+subfertile_pattern <- "Subfertile"
+fertile_pattern <- "Fertile"
 
 
 # Add a new column based on the counts
-melted_df$Reported_fertility <- ifelse(grepl(subfertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "subfertile",
-                                      ifelse(grepl(fertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "fertile", NA))
-ggplot(melted_df, aes(x = factor(Sampleid), y = value, fill = variable)) +
+melted_df$Reported_fertility <- ifelse(grepl(subfertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "Subfertile",
+                                      ifelse(grepl(fertile_pattern, sorted_percentage_df$Sampleid, ignore.case = TRUE), "Fertile", NA))
+
+ggplot(melted_df, aes(x = factor(Sampleid), y = value, fill = variable,alpha = variable)) +
      geom_col(position = "fill",width = 1) +
+            geom_text(
+              data = data.frame(facet_label = c("A", "B"), label = c("A", "B"),Reported_fertility= c("Fertile","Subfertile")),
+              aes(x = -Inf, y = Inf, label = label),
+              inherit.aes = FALSE,
+              vjust = 1.5, hjust = -0.1) +
      labs(title =  element_blank(),
-          x = "Sample", y = "Proportion") +
-     scale_fill_manual(values = c(
+          x = "Sample", y = "Proportion of Sperm") +
+   scale_fill_manual(values = c(
         "normalPercent" = "white",
          "IntermediaryPercent" = "grey",
          "ExtremePercent" = "black"  ),
-        labels = c("Normal", "Intermediary ", "Extreme")) +
-     theme_minimal() +
+        labels = c("Normal", "Intermediate ", "Extreme")) +
+  scale_alpha_manual(values = c(
+    "normalPercent" = 0.8
+  )) +
+     theme_bw() +
      theme(axis.text.x = element_blank(),legend.title = element_blank(),
-           legend.position = c(0.85, 0.8),  # Specify legend position (x, y)
-           legend.box.background = element_rect(color = "black", size = 1),
-           legend.key = element_rect(color = "black", size = 1),  # Set legend key outline color
-           legend.key.size = unit(1, "lines")) +  # Add box around legend)+
+           legend.position = c(0.1, 0.8),  # Specify legend position (x, y)
+           legend.key = element_rect(color = "black", size = 0.1),  # Set legend key outline color
+           legend.key.size = unit(1, "lines")) +  # Add box around legend
+    guides(alpha = "none") +  # Remove alpha legend
      facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")+
   coord_cartesian(ylim = c(0, 0.5))  # Set y-axis limits to show only half of the chart
 
-ggsave(filename = "figures/Fertile_subfertile_abnormality_graph.png", width = 170, height = 90, units = "mm", dpi = 300)
+ggsave(filename = "figures/Fertile_subfertile_abnormality_graph.png", width = 190, height = 90, units = "mm", dpi = 300)
 #############################################
 #stacked bar chart grouped by date
 # Split the "sampleid" column into two columns: "date" and "sample_number"
@@ -170,3 +180,4 @@ result_df$date <-data$date
     theme(axis.text.x = element_blank(),legend.title = element_blank())+
     facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")
 ggsave(filename = "figures/Fertile_subfertile_date_abnormality_graph.png", width = 170, height = 90, units = "mm", dpi = 300)
+
