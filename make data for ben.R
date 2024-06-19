@@ -16,7 +16,23 @@ renamedham<-as.data.frame(Outliers2) %>% rename(
 Pig_with_morphology_clusters<-merge(pig.data,renamedham,by = "CellID")
 Pig_with_morphology_clusters$Sampleid<-basename(Pig_with_morphology_clusters$Folder)
 
-
-data <- separate(Pig_with_morphology_clusters,Sampleid, into = c("date", "sample_number"), sep = " sample ")# Remove all words after the sample number
-write.table(data,"data/data_with_date_and_clusters.txt",sep = "\t")
+Pig_with_morphology_Breed_data <- Pig_with_morphology_clusters %>%
+  mutate(
+    Breed = case_when(
+      grepl(" sample 6 ", Sampleid, ignore.case = TRUE) ~ "Hampshire",
+      grepl(" sample 2 ", Sampleid, ignore.case = TRUE) ~ "Landrace",
+      grepl(" sample 5 ", Sampleid, ignore.case = TRUE) ~ "Large White",
+      grepl(" sample 3 ", Sampleid, ignore.case = TRUE) ~ "Pietrain",
+      grepl(" sample 9 ", Sampleid, ignore.case = TRUE) ~ "White Duroc",
+      TRUE ~ "Other"
+    ),
+    Morphology_cluster = case_when(
+      Morphology_cluster %in% c(1) ~ 1,
+      Morphology_cluster %in% c(5, 6) ~ 2,
+      Morphology_cluster %in% c(4, 7, 8) ~ 3,
+      TRUE ~ as.numeric(Morphology_cluster)
+    )
+  )
+data <- separate(Pig_with_morphology_Breed_data,Sampleid, into = c("date", "sample_number"), sep = " sample ")# Remove all words after the sample number
+write.table(data,"data/data_with_date_and_clusters.txt",sep = "\t", row.names = FALSE)
 
