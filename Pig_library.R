@@ -8,7 +8,8 @@ library(ggplot2)
 library(patchwork)
 library(scales)
 library(caret) # cross - validation methods
-
+library(data.table)
+library(modEvA) # plotting GLM outputs
 
 library(caTools)
 source("Ben's_common_functions.R")
@@ -25,6 +26,6 @@ if (!dir.exists("figures")) {
 
 # Move the file
 file.rename("Pig_Datasets.csv.bz", "data/Pig_Datasets.csv.bz")
-pig_data<- read.csv(bzfile("data/Pig_Datasets.csv.gz"))
+pig_data<- read.csv(bzfile("data/Pig_Datasets.csv.bz"))
 
 

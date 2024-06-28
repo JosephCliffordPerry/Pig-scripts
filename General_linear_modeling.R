@@ -1,4 +1,3 @@
-
 ######################## Functions##############################################
 # Remove cells with angle profile values far outside the expected range. Most
 # of these are edge detection errors
@@ -238,7 +237,7 @@ Outliers4<-read.table("D:/Full_pig_project/Pig_scripts/Pig_outliers4.txt",sep = 
 
 #adding our categories that are based on our detected abnormality instead of the breeder reported on that allows for a different divide based only on morphology
 
-renamedham<-Outliers4 %>% rename(
+renamedham<-Outliers2 %>% rename(
   CellID = V1,
   Morphology_cluster = V2)
 
@@ -326,7 +325,7 @@ D<-Dper.sample.output[["predicted.samples"]]
 A2 <-A+
   labs(
     x = "Breeder Reported Fertility",   # Change X-axis label
-    title = "A"  # Change plot title
+    title = "B"  # Change plot title
   ) +
   scale_x_discrete(labels = c("Subfertile", "Fertile"))+  # Change X-axis labels
 scale_y_continuous(limits = c(0, 1))
@@ -334,27 +333,14 @@ scale_y_continuous(limits = c(0, 1))
 B2 <-B+
   labs(
     x = "Breeder Reported Fertility",   # Change X-axis label
-    title = "B"  # Change plot title
+    title = "A"  # Change plot title
   ) +
   scale_x_discrete(labels = c("Subfertile", "Fertile"))+  # Change X-axis labels
 scale_y_continuous(limits = c(0, 1))
 
 
-C2 <-C+
-  labs(
-    x = "20% Abnormality Fertility Threshold",   # Change X-axis label
-    title = "C"  # Change plot title
-  )+
-scale_y_continuous(limits = c(0, 1))
 
-D2 <-D+
-  labs(
-    x = "20% Abnormality Fertility Threshold",   # Change X-axis label
-    title = "D"  # Change plot title
-  )+
-scale_y_continuous(limits = c(0, 1))
-
-Patch<- A2 + B2 + C2 + D2
+Patch<- B2 + A2
 Patch
 ggsave(filename = "figures/GLM_graph.png",width = 180,height = 180,units = "mm",dpi = 300)
 
