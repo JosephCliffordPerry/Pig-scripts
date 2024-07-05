@@ -115,29 +115,30 @@ ggplot(melted_df, aes(x = factor(Sampleid), y = value, fill = variable,alpha = v
      geom_col(position = "fill",width = 1) +
             geom_text(
               data = data.frame(facet_label = c("A", "B"), label = c("A", "B"),Reported_fertility= c("Fertile","Subfertile")),
-              aes(x = -Inf, y = Inf, label = label),
+              aes(x = -Inf, y = Inf, label = label, fontface = "bold"),
               inherit.aes = FALSE,
-              vjust = 1.5, hjust = -0.1) +
+              vjust = -0.5, hjust = 2) +
      labs(title =  element_blank(),
-          x = "Sample", y = "Proportion of Sperm") +
+          x = "Sample (ordered by proportion of abnomal sperm)", y = "Proportion of Sperm") +
    scale_fill_manual(values = c(
-        "normalPercent" = "white",
-         "IntermediaryPercent" = "grey",
-         "ExtremePercent" = "black"  ),
+        "normalPercent" = "#7eb17e",#"white"
+         "IntermediaryPercent" = "#2e8f3d",# "grey"
+         "ExtremePercent" = "#19563e"  ),# "black"
         labels = c("Normal", "Intermediate ", "Extreme")) +
   scale_alpha_manual(values = c(
-    "normalPercent" = 0.8
+    "normalPercent" = 1
   )) +
      theme_bw() +
      theme(axis.text.x = element_blank(),legend.title = element_blank(),
            legend.position = c(0.1, 0.8),  # Specify legend position (x, y)
            legend.key = element_rect(color = "black", size = 0.1),  # Set legend key outline color
-           legend.key.size = unit(1, "lines")) +  # Add box around legend
+           legend.key.size = unit(1, "lines"),
+           strip.text = element_text(size = 12)) +
     guides(alpha = "none") +  # Remove alpha legend
      facet_wrap(~ Reported_fertility, nrow = 1,scale = "free")+
-  coord_cartesian(ylim = c(0, 0.5))  # Set y-axis limits to show only half of the chart
+  coord_cartesian(clip = "off")  # Set y-axis limits to show only half of the chart ylim = c(0, 0.5),
 
-ggsave(filename = "figures/Fertile_subfertile_abnormality_graph.png", width = 190, height = 90, units = "mm", dpi = 300)
+ggsave(filename = "figures/Fertile_subfertile_abnormality_graph.png", width = 190, height = 135, units = "mm", dpi = 300)
 #############################################
 #stacked bar chart grouped by date
 # Split the "sampleid" column into two columns: "date" and "sample_number"

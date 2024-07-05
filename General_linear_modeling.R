@@ -223,7 +223,7 @@ Aper.sample.output <- run.profile.glm(train, test)
 
 
 
-pig_standard_measuremnts<-as.data.frame(cbind(Sample = pig.data$Sample,pig.data$Perimeter_pixels,pig.data$Regularity,pig.data$Bounding_width_pixels,pig.data$Bounding_height_pixels,pig.data$Area_square_pixels,pig.data$Elongation,pig.data$Ellipticity,pig.data$Circularity))
+pig_standard_measuremnts<-as.data.frame(cbind(sample = pig.data$Sample,perimeter_pixels = pig.data$Perimeter_pixels,Regularity = pig.data$Regularity,Bounding_width_pixels = pig.data$Bounding_width_pixels,Bounding_height_pixels = pig.data$Bounding_height_pixels,Area_square_pixels = pig.data$Area_square_pixels,Elongation = pig.data$Elongation,Ellipticity = pig.data$Ellipticity,Circularity = pig.data$Circularity))
 
 # Convert all columns except the first to numeric
 pig_standard_measuremnts[, -1] <- lapply(pig_standard_measuremnts[, -1], as.numeric)

@@ -36,3 +36,9 @@ Pig_with_morphology_Breed_data <- Pig_with_morphology_clusters %>%
 data <- separate(Pig_with_morphology_Breed_data,Sampleid, into = c("date", "sample_number"), sep = " sample ")# Remove all words after the sample number
 write.table(data,"data/data_with_date_and_clusters.txt",sep = "\t", row.names = FALSE)
 
+# Subset where Type is "Abnormal"
+abnormal <- subset(data, Type == "Abnormal")
+table(abnormal$Morphology_cluster)
+# Subset where TypeInt is "Normal"
+normal <- subset(data, Type == "Normal")
+table(normal$Morphology_cluster)
