@@ -141,7 +141,7 @@ write_tsv(sample.model$tidy.model, file = "figures/olr_results.tsv")
 # Predominant date effect from 2016-07-06. What is happening?
 ggplot(pig.data, aes(x = SampleCollectionDate, fill = Cluster, alpha = Cluster))+
   geom_bar(position = "fill")+
-  scale_fill_manual( values = c("white", "grey", "black"))+
+  scale_fill_manual( values = c("#7eb17e", "#2e8f3d", "#19563e"))+
   scale_alpha_manual(values = c("Normal" = 0, "Intermediate" = 1, "Extreme"=1))+
   coord_cartesian(ylim = c(0, 0.5))+
   labs(y = "Proportion of sample")+
@@ -156,7 +156,7 @@ save.ggplot(last_plot(), "Figure_Sxxxx_Breed_clusters.png")
 
 ggplot(pig.data, aes(x = Sample, fill = Cluster, alpha = Cluster))+
   geom_bar(position = "fill")+
-  scale_fill_manual( values = c("white", "grey", "black"))+
+  scale_fill_manual( values = c("#7eb17e", "#2e8f3d", "#19563e"))+
   scale_alpha_manual(values = c("Normal" = 0, "Intermediate" = 1, "Extreme"=1))+
   coord_cartesian(ylim = c(0, 0.5))+
   labs(y = "Proportion of sample")+
@@ -168,3 +168,4 @@ ggplot(pig.data, aes(x = Sample, fill = Cluster, alpha = Cluster))+
         legend.position = "top")
 
 save.ggplot(last_plot(), "Figure_Sxxxx_Sample_clusters.png")
+
